@@ -22,7 +22,7 @@ def index():
         if request.json is not None:
             print(request.json)
             with open(QWC2_THEME_CONFIG, 'w') as c:
-                json.dump(request.json, c)
+                json.dump(request.json, c, indent=4)
 
         return "OK", 200
 
@@ -34,41 +34,6 @@ def index():
 
     # update config
 
-
-# Function to generate one item in items dictionary 
-def generateItem(project):
-    item={}
-    scales=[]
-    backgroundLayers=[]
-    searchProviders=[]
-    additionalMouseCrs=[]
-    item["url"]=config["project"]["url"]+os.path.splitext(os.path.basename(project))[0]
-    item["attribution"]=config["project"]["attribution"]
-    item["attributionUrl"]=config["project"]["attributionUrl"]
-    item["format"]="image/png; mode=8bit"
-    item["default"]= True
-    scales=config["defaultScales"]
-    item["scales"]=[]
-    for i in scales:
-        item["scales"].append(i)
-    backgroundLayers=config["themes"]["backgroundLayers"]
-    item["backgroundLayers"]=[]
-    for i in backgroundLayers:
-        layer={}
-        layer["name"]=i["name"]
-        layer["visibility"]=True
-        item["backgroundLayers"].append(layer)
-    searchProviders=config["project"]["searchProviders"]
-    item["searchProviders"]=[]
-    for i in searchProviders:
-        item["searchProviders"].append(i)
-    item["mapCrs"]=config["project"]["mapCrs"]
-    additionalMouseCrs=config["project"]["additionalMouseCrs"]
-    item["additionalMouseCrs"]=[]
-    for i in additionalMouseCrs:
-        item["additionalMouseCrs"].append(i)
-    item["collapseLayerGroupsBelowLevel"]= 1
-    config["themes"]["items"].append(item)
 
 
 if __name__ == "__main__":
