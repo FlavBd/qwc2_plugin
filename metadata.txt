@@ -1,0 +1,10 @@
+[general]
+name=AddNewProject
+description=Add a new project in a QWC2 app
+about=About this AddNewProject plugin
+version=1.0
+qgisMinimumVersion=3.0
+author=
+email=
+icon=qwc2.png
+repository=URL to the code repository
