@@ -1,7 +1,7 @@
 [general]
-name=AddNewProject
+name=QWC2plugin
 description=Add a new project in a QWC2 app
-about=About this AddNewProject plugin
+about=About this plugin
 version=1.0
 qgisMinimumVersion=3.0
 author=

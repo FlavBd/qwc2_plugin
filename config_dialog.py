@@ -9,7 +9,7 @@ import requests
 
 from .project_dialog import ProjectWidget
 
-class ConfigDialog(QWidget):
+class ConfigDialog(QDialog):
     def __init__(self, currentQgisProjectFile, parent=None):
         super(ConfigDialog, self).__init__(parent)
         uic.loadUi(os.path.join(os.path.dirname(__file__), "config_dialog.ui"), self)
@@ -30,14 +30,14 @@ class ConfigDialog(QWidget):
         self.__currentQgisProjectFile = os.path.abspath(currentQgisProjectFile)
 
         self.projectsComboBox.currentIndexChanged[str].connect(self.__projectChanged)
+        self.getConfigButton.clicked.connect(self.__getConfig)
 
         # autres test pour savoir si qgis server project
         if self.urlLineEdit.text():
-            self.getConfig()
+            self.__getConfig()
         
 
-    def getConfig(self):
-        print("getConfig")
+    def __getConfig(self):
         self.projectsComboBox.clear()
         self.__projectIdxInConfig = None
 
@@ -55,10 +55,8 @@ class ConfigDialog(QWidget):
             projects.append(project)
             if project == currentProject:
                 self.__projectIdxInConfig = i
-                print("WTF", i, project)
 
         if self.__projectIdxInConfig is None:
-            print("adds ", currentProject)
             self.__config['themes']['items'].append({
                 "url": self.urlLineEdit.text()+'/'+currentProject,
                 "scales": [4000000, 2000000, 1000000, 400000, 200000, 80000, 40000, 20000, 10000, 8000, 6000, 4000, 2000, 1000, 500, 250, 100],
@@ -77,9 +75,7 @@ class ConfigDialog(QWidget):
 
         self.projectsComboBox.addItems(projects)
 
-    def __projectChanged(self, selection):
-        print("__projectChanged", selection, self.__projectIdxInConfig)
-        
+    def __projectChanged(self, selection):        
         # save previous ProjectConfig
         if self.__projectConfig is not None:
             if self.__projectIdxInConfig is not None:
@@ -121,6 +117,9 @@ class ConfigDialog(QWidget):
             if r.status_code != 200:
                 self.warningLabel.setText("attempting to save the config, the server request returned code {}".format(r.status_code))
                 return
+        
+        super(ConfigDialog, self).accept()
+
     
 if __name__ == "__main__":
     from qgis.core import QgsApplication
@@ -128,20 +127,7 @@ if __name__ == "__main__":
     a = QgsApplication([], False)
     a.initQgis()
 
-    d = QDialog()
-    d.resize(800, 600)
-    l = QVBoxLayout()
-    d.setLayout(l)
-    w = ConfigDialog(sys.argv[1] if len(sys.argv) >= 2 else None)
-    l.addWidget(w)
-  
-    b = QPushButton("Refresh")
-    l.addWidget(b)
-    b.clicked.connect(w.getConfig)
-    
-    b = QPushButton("Accept")
-    l.addWidget(b)
-    b.clicked.connect(w.accept)
-  
+    d = ConfigDialog(sys.argv[1] if len(sys.argv) >= 2 else None)
+
     d.show()
     a.exec()
