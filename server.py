@@ -20,7 +20,6 @@ def index():
             f.save(os.path.join(QGIS_PROJECT_DIRECTORY, f.filename))
 
         if request.json is not None:
-            print(request.json)
             with open(QWC2_THEME_CONFIG, 'w') as c:
                 json.dump(request.json, c, indent=4)
 
@@ -29,11 +28,7 @@ def index():
     else:
         with open(QWC2_THEME_CONFIG) as f:
             config = json.load(f)
-            print(config)
         return config, 200
-
-    # update config
-
 
 
 if __name__ == "__main__":

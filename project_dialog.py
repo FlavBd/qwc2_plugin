@@ -5,11 +5,8 @@ from qgis.PyQt import uic
 class ProjectWidget(QWidget):
     def __init__(self, item, backgrounds, parent=None):
         super(ProjectWidget, self).__init__(parent)
-        print("here")
         uic.loadUi(os.path.join(os.path.dirname(__file__), "project_dialog.ui"), self)
-        print("there")
         self.__item = item
-        print(item['scales'])
         self.scaleLineEdit.setText(str([int(s) for s in item['scales']])[1:-1])
 
         defaultBackgroundIdx = None

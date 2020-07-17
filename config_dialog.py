@@ -1,7 +1,6 @@
 from qgis.PyQt.QtWidgets import QDialog, QWidget, QPushButton, QVBoxLayout, QCheckBox
 from qgis.PyQt import uic
 from qgis.core import QgsSettings
-#from urllib import requests
 from subprocess import Popen, check_output, PIPE
 import os
 import sys
@@ -88,7 +87,6 @@ class ConfigDialog(QDialog):
         for i, item in enumerate(self.__config['themes']['items']):
             if item['url'].split("/")[-1] == selection: # /!\ assumes qgs projet name is at the end of url
                 self.__projectIdxInConfig = i
-                print("found", i)
                 break
         if self.__projectIdxInConfig is not None:
             self.__projectConfig = ProjectWidget(
