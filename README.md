@@ -57,6 +57,6 @@ Some improvements that we can think of after that:
 
 # Talk about it ...
 
-We already talk about this plugin in [the mailling list QWC2](http://osgeo-org.1560.x6.nabble.com/New-features-in-QWC2-td5434695.html) and in an issue on github. 
+We already talk about this plugin in [the mailling list QWC2](http://osgeo-org.1560.x6.nabble.com/New-features-in-QWC2-td5434695.html) and in [an issue on github](https://github.com/qgis/qwc2-demo-app/issues/3). 
 
 Feel free to add comments or/and suggest changes.
