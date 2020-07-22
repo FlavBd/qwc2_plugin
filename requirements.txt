@@ -1,0 +1,5 @@
+flask
+flask_login
+git+git://github.com/qwc-services/qwc-services-core.git#egg=qwc-services-core
+sqlalchemy
+psycopg2
