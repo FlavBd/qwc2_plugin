@@ -40,7 +40,8 @@ class ConfigDialog(QDialog):
         self.projectsComboBox.clear()
         self.__projectIdxInConfig = None
 
-        r = requests.get(self.urlLineEdit.text()+'/config')
+        session = self.__createSession()
+        r = session.get(self.urlLineEdit.text()+'/config')
         if r.status_code != 200:
             self.warningLabel.setText("attempring to get server config, the server request returned code {}".format(r.status_code))
             return
@@ -49,14 +50,14 @@ class ConfigDialog(QDialog):
         #Afficher les projets du themesConfig dans la boite de dialog Projects
         currentProject = os.path.splitext(os.path.basename(self.__currentQgisProjectFile))[0]
         projects = []
-        for i, item in enumerate(self.__config['themes']['items']):
+        for i, item in enumerate(self.__config['themesConfig']['themes']['items']):
             project = item['url'].split("/")[-1]
             projects.append(project)
             if project == currentProject:
                 self.__projectIdxInConfig = i
 
         if self.__projectIdxInConfig is None:
-            self.__config['themes']['items'].append({
+            self.__config['themesConfig']['themes']['items'].append({
                 "url": self.urlLineEdit.text()+'/'+currentProject,
                 "scales": [4000000, 2000000, 1000000, 400000, 200000, 80000, 40000, 20000, 10000, 8000, 6000, 4000, 2000, 1000, 500, 250, 100],
                 "attribution": "",
@@ -69,7 +70,7 @@ class ConfigDialog(QDialog):
                 "additionalMouseCrs": [],
                 "collapseLayerGroupsBelowLevel": 1
             })
-            self.__projectIdxInConfig = len(self.__config['themes']['items']) - 1
+            self.__projectIdxInConfig = len(self.__config['themesConfig']['themes']['items']) - 1
             projects = [currentProject] + projects
 
         self.projectsComboBox.addItems(projects)
@@ -78,23 +79,30 @@ class ConfigDialog(QDialog):
         # save previous ProjectConfig
         if self.__projectConfig is not None:
             if self.__projectIdxInConfig is not None:
-                self.__config['themes']['items'][self.__projectIdxInConfig] = self.__projectConfig.item()
+                self.__config['themesConfig']['themes']['items'][self.__projectIdxInConfig] = self.__projectConfig.item()
             self.__projectConfig.setParent(None)
             self.__projectConfig = None
 
 
         # replace ProjectConfig
-        for i, item in enumerate(self.__config['themes']['items']):
+        for i, item in enumerate(self.__config['themesConfig']['themes']['items']):
             if item['url'].split("/")[-1] == selection: # /!\ assumes qgs projet name is at the end of url
                 self.__projectIdxInConfig = i
                 break
         if self.__projectIdxInConfig is not None:
             self.__projectConfig = ProjectWidget(
-                self.__config['themes']['items'][self.__projectIdxInConfig],
-                self.__config['themes']['backgroundLayers'])
+                self.__config['themesConfig']['themes']['items'][self.__projectIdxInConfig],
+                self.__config['themesConfig']['themes']['backgroundLayers'])
             self.__projectConfig.show()  
             self.projectsGroupBox.layout().addWidget(self.__projectConfig)
 
+    def __createSession(self):
+        s = QgsSettings()
+        session = requests.Session()
+        r = session.post(
+            self.urlLineEdit.text() + '/auth/login', 
+                {"username": s.value("qwc2configurator/server/username"), "password": s.value("qwc2configurator/server/password")})
+        return session
   
     def accept(self):
         s = QgsSettings()
@@ -104,14 +112,16 @@ class ConfigDialog(QDialog):
 
         if self.__projectConfig is not None:
         
-            self.__config['themes']['items'][self.__projectIdxInConfig] = self.__projectConfig.item()
+            self.__config['themesConfig']['themes']['items'][self.__projectIdxInConfig] = self.__projectConfig.item()
             
             #Vérification authentification server
-            r = requests.post(self.urlLineEdit.text()+'/config', files={'project_file': (os.path.basename(self.__currentQgisProjectFile), open(self.__currentQgisProjectFile, 'rb'), 'application/xml')})
+            session = self.__createSession()
+
+            r = session.post(self.urlLineEdit.text()+'/config', files={'project_file': (os.path.basename(self.__currentQgisProjectFile),open(self.__currentQgisProjectFile, 'rb'), 'application/xml')})
             if r.status_code != 200:
                 self.warningLabel.setText("attempting to send qgis project, the server request returned code {}".format(r.status_code))
                 return        
-            r = requests.post(self.urlLineEdit.text()+'/config', headers={'content-Type': 'application/json'}, json=self.__config)
+            r = session.post(self.urlLineEdit.text()+'/config', headers={'content-Type': 'application/json'}, json=self.__config)
             if r.status_code != 200:
                 self.warningLabel.setText("attempting to save the config, the server request returned code {}".format(r.status_code))
                 return
