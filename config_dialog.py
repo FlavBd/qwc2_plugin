@@ -1,6 +1,6 @@
 from qgis.PyQt.QtWidgets import QDialog, QWidget, QPushButton, QVBoxLayout, QCheckBox
 from qgis.PyQt import uic
-from qgis.core import QgsSettings
+from qgis.core import QgsSettings, QgsMessageLog, Qgis
 from subprocess import Popen, check_output, PIPE
 import os
 import sys
@@ -31,19 +31,21 @@ class ConfigDialog(QDialog):
         self.projectsComboBox.currentIndexChanged[str].connect(self.__projectChanged)
         self.getConfigButton.clicked.connect(self.__getConfig)
 
-        # autres test pour savoir si qgis server project
-        if self.urlLineEdit.text():
-            self.__getConfig()
-        
-
     def __getConfig(self):
+        s = QgsSettings()
         self.projectsComboBox.clear()
         self.__projectIdxInConfig = None
+        s.setValue("qwc2configurator/server/url", self.urlLineEdit.text())
+        s.setValue("qwc2configurator/server/username", self.usernameLineEdit.text())
+        s.setValue("qwc2configurator/server/password", self.passwordLineEdit.text())
+        url = self.urlLineEdit.text()
 
         session = self.__createSession()
-        r = session.get(self.urlLineEdit.text()+'/config')
+        # You can optionally pass a 'tag' and a 'level' parameters
+        r = session.get(url+'/plugin/get_config')
         if r.status_code != 200:
-            self.warningLabel.setText("attempring to get server config, the server request returned code {}".format(r.status_code))
+            QgsMessageLog.logMessage("attempting to get server config, the server request returned code {}".format(r.status_code), 'QWC2 Plugin', level=Qgis.Critical)
+            self.warningLabel.setText("attempting to get server config, the server request returned code {}".format(r.status_code))
             return
         self.__config = r.json()
 
@@ -58,7 +60,7 @@ class ConfigDialog(QDialog):
 
         if self.__projectIdxInConfig is None:
             self.__config['themesConfig']['themes']['items'].append({
-                "url": self.urlLineEdit.text()+'/'+currentProject,
+                "url": self.urlLineEdit.text()+'/qgis/'+currentProject,
                 "scales": [4000000, 2000000, 1000000, 400000, 200000, 80000, 40000, 20000, 10000, 8000, 6000, 4000, 2000, 1000, 500, 250, 100],
                 "attribution": "",
                 "attributionUrl": "",
@@ -99,9 +101,12 @@ class ConfigDialog(QDialog):
     def __createSession(self):
         s = QgsSettings()
         session = requests.Session()
+        url = self.urlLineEdit.text()
+        username = s.value("qwc2configurator/server/username")
+        password = s.value("qwc2configurator/server/password")
         r = session.post(
-            self.urlLineEdit.text() + '/auth/login', 
-                {"username": s.value("qwc2configurator/server/username"), "password": s.value("qwc2configurator/server/password")})
+            url + '/auth/login?url=' + url + '/admin',
+                {"username": username, "password": password})
         return session
   
     def accept(self):
@@ -117,14 +122,20 @@ class ConfigDialog(QDialog):
             #Vérification authentification server
             session = self.__createSession()
 
-            r = session.post(self.urlLineEdit.text()+'/config', files={'project_file': (os.path.basename(self.__currentQgisProjectFile),open(self.__currentQgisProjectFile, 'rb'), 'application/xml')})
+            r = session.post(self.urlLineEdit.text()+'/plugin/set_project', files={'project_file': (os.path.basename(self.__currentQgisProjectFile),open(self.__currentQgisProjectFile, 'rb'), 'application/xml')})
             if r.status_code != 200:
+                QgsMessageLog.logMessage("attempting to send qgis project, the server request returned code {}".format(r.status_code), 'QWC2 Plugin', level=Qgis.Critical)
                 self.warningLabel.setText("attempting to send qgis project, the server request returned code {}".format(r.status_code))
-                return        
-            r = session.post(self.urlLineEdit.text()+'/config', headers={'content-Type': 'application/json'}, json=self.__config)
+                return
+            else:
+                QgsMessageLog.logMessage("QGIS project has been sent to the server", 'QWC2 Plugin', level=Qgis.Success)
+            r = session.post(self.urlLineEdit.text()+'/plugin/set_config', headers={'content-Type': 'application/json'}, json=self.__config)
             if r.status_code != 200:
+                QgsMessageLog.logMessage("attempting to save new configuration, the server request returned code {}".format(r.status_code), 'QWC2 Plugin', level=Qgis.Critical)
                 self.warningLabel.setText("attempting to save the config, the server request returned code {}".format(r.status_code))
                 return
+            else:
+                QgsMessageLog.logMessage("New configuration has been saved", 'QWC2 Plugin', level=Qgis.Success)
         
         super(ConfigDialog, self).accept()
 

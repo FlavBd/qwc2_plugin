@@ -7,7 +7,8 @@ class ProjectWidget(QWidget):
         super(ProjectWidget, self).__init__(parent)
         uic.loadUi(os.path.join(os.path.dirname(__file__), "project_dialog.ui"), self)
         self.__item = item
-        self.scaleLineEdit.setText(str([int(s) for s in item['scales']])[1:-1])
+        if 'scales' in item:
+            self.scaleLineEdit.setText(str([int(s) for s in item['scales']])[1:-1])
 
         defaultBackgroundIdx = None
         self.backgroundComboBox.addItem("")
@@ -18,7 +19,7 @@ class ProjectWidget(QWidget):
             for l in item['backgroundLayers']:
                 if (l['name']==layer['name']) == 1:
                     checkBox.setChecked(True)
-                    if l['visibility']:
+                    if 'visibilitiy' in l:
                         defaultBackgroundIdx = i + 1
 
         if defaultBackgroundIdx is not None:
@@ -30,8 +31,10 @@ class ProjectWidget(QWidget):
             self.nominatimCheckBox.setChecked(True)
 
     def item(self):
-
-        self.__item['scales'] = self.scaleLineEdit.text().split(',')
+        if self.scaleLineEdit.text() != '':
+            self.__item['scales'].clear()
+            for s in self.scaleLineEdit.text().split(', '):
+                self.__item['scales'].append(int(s))
         checkBoxes = [self.backgroundLayout.itemAt(i).widget() 
             for i in range(self.backgroundLayout.count())]
         self.__item['backgroundLayers'] = [
