@@ -2,11 +2,14 @@
 import os
 import json
 import requests
-from flask import Flask, request
+import io
+import zipfile
+from flask import Flask, request, send_file
 from flask_jwt_extended import jwt_optional, get_jwt_identity, jwt_required
 from qwc_services_core.jwt import jwt_manager
 
 QGIS_PROJECT_DIRECTORY = '/opt/qgis-server/'
+PLUGIN_DIRECTORY = '/opt/qwc2/qwc-services/qwc2_plugin/plugin'
 CONFIG_FILE = '/opt/qwc2/qwc-services/config-in/default/tenantConfig.json'
 QGIS_SERVER_URL = 'https://qgisweb.oslandia.net' #TODO get that from request url because this service runs on the same server as qgis-server
 
@@ -63,6 +66,20 @@ def set_config():
         print(r.text)
         return r.text
     return "OK", 200
+
+@app.route('/download', methods=['GET'])
+def download():
+    """Download plugin directory as zip file
+    ---
+    TODO :
+    - set PLUGIN_DIRECTORY with env variable
+    """    
+    data = io.BytesIO()
+    with zipfile.ZipFile(data, mode='w') as z:
+        for filename in os.listdir(PLUGIN_DIRECTORY):
+            z.write(os.path.join(PLUGIN_DIRECTORY, filename), filename)
+    data.seek(0)
+    return send_file(data, mimetype='application/zip', as_attachment=True, attachment_filename='qwc2_plugin.zip')
 
 if __name__ == "__main__":
     app.run(debug=True)
