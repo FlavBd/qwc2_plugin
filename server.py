@@ -77,7 +77,7 @@ def download():
     data = io.BytesIO()
     with zipfile.ZipFile(data, mode='w') as z:
         for filename in os.listdir(PLUGIN_DIRECTORY):
-            z.write(os.path.join(PLUGIN_DIRECTORY, filename), filename)
+            z.write(os.path.join(PLUGIN_DIRECTORY, filename), 'qwc2_plugin/' + filename)
     data.seek(0)
     return send_file(data, mimetype='application/zip', as_attachment=True, attachment_filename='qwc2_plugin.zip')
 
