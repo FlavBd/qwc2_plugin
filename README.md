@@ -8,9 +8,14 @@ Below is a blueprint of the architecture .
 
 There are two prerequisite :
 
-* To open the plugin window and add a new project in the application, it is necessary to have **a QGIS project opened in QGIS Desktop**. Once the window is opened the user can also configure projects that are already published. If the user only want to modify an existing project, he must open it in QGIS Desktop to open the QWC2 plugin configuration window.
+* To open the plugin window and add a new project in the application, it is necessary to have **a QGIS (.qgs) project opened in QGIS Desktop**. Once the window is opened the user can also configure projects that are already published. If the user only want to modify an existing project, he must open it in QGIS Desktop to open the QWC2 plugin configuration window.
 
-* The user also needs to know the url of the server, his/her username and password. 
+* The user also needs to know the url of the server, his/her username and password.
+
+To a better understanding of what we realised, we propose here [a short video of the plugin](https://youtu.be/XK5nevc4D9g) : 
+
+Like you can see, the first step is to create and configure your project in QGIS Desktop : symbology, QGIS Server services.
+After you click on the button an interface opened where the user gives the url server, username and password. Clicking on "test connection" allows the connection to the server and add information about projects already in the app and the project you want to add in the interface. You can modify informaiton and then click to add the project in the application. After some minutes, the project is in the app! If you refresh your web page you can see the project and the symbology you choose.
 
 # To test the plugin... how it works now
 
@@ -42,13 +47,13 @@ It is divided in two part:
 * in the authentication part, the user complete the required information to connect to the server. The user click on *test connection* to check url and credentials and get the current configuration.
 * in the project part updated information from the `themesconfig.json` are presented. The default diplayed project is the one currently opened in QGIS. The user can display/configure all projects already on the server: scales, background, default background and searchproviders. When the user click on **ok** information sent to the server component that saves in `themesConfig.json`.
 
+We created a micro service with Flask to :
+* check if the user informations are correct and tranfert QGIS project already in QWC2 application in the plugin interface on QGIS,
+* transfert the new information of the projects choosen by the user and rebuild the app
+
+Also, thanks to `server.py` if th zip file of the `plugin` directory is install on your server, you can upload it by adding `/qgis/plugin` at the end of your server url. A zip file is porposed to the user who can activate it with the QGIS Plugin Manager.
+
 # Way to improve it... how it will work
-
-The server component will be running the server, it will provide the plugin as part of its service. The user will dowload the plugin on, say, `https://<the_server_url>/plugin/qwc2_plugin.zip` and install it on his computer and activate it with the QGIS Plugin Manager.
-
-The user will click on the config dialog icon and configure the projects published on the server.
-
-We are currently working on the authentication using existing QWC2 services, the generation of `themes.json` is also already available as a QWC2 service.
 
 Some improvements that we can think of after that:
 * control if the project has QGIS Server services activated,
