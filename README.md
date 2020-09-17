@@ -6,16 +6,16 @@ Below is a blueprint of the architecture .
 
 ![From the user to the application](img_plugin/plugin_archi.png)
 
-There are two prerequisite :
+There are two prerequisites :
 
-* To open the plugin window and add a new project in the application, it is necessary to have **a QGIS (.qgs) project opened in QGIS Desktop**. Once the window is opened the user can also configure projects that are already published. If the user only want to modify an existing project, he must open it in QGIS Desktop to open the QWC2 plugin configuration window.
+* To open the plugin window and add a new project in the application, it is necessary to have **a QGIS (.qgs) project opened in QGIS Desktop**. Once the window is opened the user can also configure projects that are already published. If the user only wants to modify an existing project, he must open it in QGIS Desktop to open the QWC2 plugin configuration window.
 
 * The user also needs to know the url of the server, his/her username and password.
 
 To a better understanding of what we realised, we propose here [a short video of the plugin](https://youtu.be/XK5nevc4D9g) : 
 
-Like you can see, the first step is to create and configure your project in QGIS Desktop : symbology, QGIS Server services.
-After you click on the button an interface opened where the user gives the url server, username and password. Clicking on "test connection" allows the connection to the server and add information about projects already in the app and the project you want to add in the interface. You can modify informaiton and then click to add the project in the application. After some minutes, the project is in the app! If you refresh your web page you can see the project and the symbology you choose.
+As you can see, the first step is to create and configure your project in QGIS Desktop : symbology, QGIS Server services.
+After you click on the button a window appears where the user gives the url server, username and password. Clicking on "test connection" allows the connection to the server and add information about projects already in the app and the project you want to add in the interface. You can modify informaiton and then click `OK` to add the project in the application. After some minutes, the project is in the app! If you refresh your web page you can see the project and the symbology you choose.
 
 # To test the plugin... how it works now
 
@@ -30,11 +30,11 @@ Run the server component locally:
 cd  ~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/qwc2_plugin
 virtualenv -p python3 venv
 . venv/bin/activate
-pip install flask
+pip install -r requirements.txt
 python server.py
 ```
 
-It is necessary to have a `themesConfig.json` in the path defined in `server.py`, by default `tmp/themesConfig.json`.
+For now, there is a configuration file (the same as in [qwc-config-generator](https://github.com/qwc-services/qwc-config-generator)) defined in `server.py`. It is located in your QWC2 installation directory, for example, here `/opt/qwc2/qwc-services/config-in/default/tenantConfig.json`.
 
 Open QGIS desktop, create a QGIS project, configure QGIS server services (WMS, WFS...), activate the plugin and click on the QWC2 icon in the plugin toolbar (the third one) ![](img_plugin/icon.png)
 
@@ -42,23 +42,25 @@ The configuration dialog opens:
 
 ![](img_plugin/dialog.png)
 
-It is divided in two part:
+It is divided in two parts:
 
-* in the authentication part, the user complete the required information to connect to the server. The user click on *test connection* to check url and credentials and get the current configuration.
-* in the project part updated information from the `themesconfig.json` are presented. The default diplayed project is the one currently opened in QGIS. The user can display/configure all projects already on the server: scales, background, default background and searchproviders. When the user click on **ok** information sent to the server component that saves in `themesConfig.json`.
+* in the authentication part, the user completes the required information to connect to the server. The user clicks on *test connection* to check url and credentials and get the current configuration.
+* in the project part, updated information about projects from the `tenantConfig.json` is displayed. The default displayed project is the one currently opened in QGIS. The user can switch on all projects already on the server and configure them one by one: scales, background, default background and searchproviders. When the user clicks on **ok**, new configuration is sent to the server and qwc-config-generator generates new files.
 
 We created a micro service with Flask to :
-* check if the user informations are correct and tranfert QGIS project already in QWC2 application in the plugin interface on QGIS,
-* transfert the new information of the projects choosen by the user and rebuild the app
+* connect plugin to QWC2 application
+* copy QGIS project on the server
+* update configuration of qwc-config-generator
+* generate new configuration, thanks to qwc-config-generator
 
-Also, thanks to `server.py` if th zip file of the `plugin` directory is install on your server, you can upload it by adding `/qgis/plugin` at the end of your server url. A zip file is porposed to the user who can activate it with the QGIS Plugin Manager.
+Also, thanks to `server.py`, you can download zip file of the `plugin` directory to install it in QGIS. For example, you can download it at [https://qgisweb.oslandia.net/plugin/download](https://qgisweb.oslandia.net/plugin/download).
 
 # Way to improve it... how it will work
 
 Some improvements that we can think of after that:
-* control if the project has QGIS Server services activated,
+* control if QGIS Server services in the project are activated,
 * transfer layers symbols to the server (e.g. in case of custom svg symbols)
-* transfer datasources (shapefiles, geopackages) to the server if the data used by the project are not already available "online" (note: the server typically hosts a PostGIS server)
+* transfer datasources (shapefiles, geopackages) to the server if the data used by the project is not already available "online" (note: the server typically hosts a PostGIS server)
 
 # Talk about it ...
 
